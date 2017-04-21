@@ -1,0 +1,190 @@
+{
+	"application": {
+		"categories": [
+			"apps/others",
+			"apps/management-and-monitoring"
+		],
+		"description": "Isolation of the environment within an internal network.\n\n\n\n\n\n",
+		"logo": "https://raw.githubusercontent.com/mrAlexZT/internal-network-isolation/master/images/environment-isolation-addon.png",
+		"targetNodes": {
+			"nodeGroup": "*"
+		},
+		"globals": {
+			"RepoUser": "mrAlexZT",
+			"iptables_custom_file": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/settings/iptables-custom",
+			"getIpsScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/script.js",
+			"NodesExecScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/nodes_executor.js",
+			"installIptablesAddonScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/installIptablesAddon.js",
+			"documentationLink": "http://www.netfilter.org/projects/iptables/index.html"
+		},
+		"menu": [
+			{
+				"caption": "Add the IP to the white list",
+				"confirmText": "You are going to add the IP into the white list. Continue?",
+				"loadingText": "Performing the IP adding..",
+				"procedure": "addIPintowhitelist",
+				"settings": "IPSettings",
+				"successText": "The IP was added."
+			},
+			{
+				"caption": "Remove the IP from the white list",
+				"confirmText": "You are going to remove the IP from the white list. Continue?",
+				"loadingText": "Performing the IP removing..",
+				"procedure": "removeIPfomwhitelist",
+				"settings": "IPSettings",
+				"successText": "The IP was removed."
+			}
+		],
+		"name": "Iptables Addon",
+		"env": {
+			"onAfterScaleOut": "getIps",
+			"onAfterScaleIn": "getIps"
+		},
+		"onInstall": [
+			{
+				"call": [
+					"installIptablesAddon",
+					"getIps"
+				]
+			}
+		],
+		"onUninstall": {
+			"call": "removeIptablesAddon"
+		},
+		"procedures": [
+			{
+				"id": "getIps",
+				"onCall": {
+					"executeScript": {
+						"script": "${globals.getIpsScript}"
+					}
+				}
+			},
+			{
+				"id": "NodesExec",
+				"onCall": {
+					"executeScript": {
+						"script": "${globals.NodesExecScript}"
+					}
+				}
+			},
+			{
+				"id": "installIptablesAddon",
+				"onCall": {
+					"executeScript": {
+						"script": "${globals.installIptablesAddonScript}"
+					}
+				}
+			},
+			{
+				"id": "setIpRules",
+				"onCall": {
+					"execCmd": {
+						"commands": [
+							"! grep -LE '(JELASTIC_RULES|CUSTOMER_RULES)' /etc/sysconfig/iptables-custom &>/dev/null && curl -sSfL \"${globals.iptables_custom_file}\" -o /etc/sysconfig/iptables-custom 2>&1",
+							"sed -i '/^-A JELASTIC_RULES -s [[:digit:]]*[.][[:digit:]]*[.][[:digit:]]*[.][[:digit:]]* -j ACCEPT$/ d' /etc/sysconfig/iptables-custom",
+							"sed -i '/^-A JELASTIC_RULES -s [[:digit:]]*[.][[:digit:]]*[.][[:digit:]]*[.][[:digit:]]*\\/[[:digit:]]* -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT$/ d' /etc/sysconfig/iptables-custom",
+							"/usr/bin/jem firewall fwstart",
+							"truncate -s 0 /tmp/ipArray",
+							"iptables-save | grep '\\-A INPUT \\-s [[:digit:]]*[.][[:digit:]]*[.][[:digit:]]*[.][[:digit:]]*\\/[[:digit:]]* \\-p tcp \\-m state \\-\\-state NEW \\-m tcp \\-\\-dport 22 \\-j ACCEPT' | sed 's/INPUT/JELASTIC_RULES/g' >> /tmp/ipArray",
+							"cat /etc/resolv.conf | grep -vE '(8.8.8.8|search )' | awk {'print $2'} | while read i; do echo -A JELASTIC_RULES -s $i -j ACCEPT >> /tmp/ipArray; done",
+							"for i in $(echo \"${this.ipArray}\" | sed -r 's/;/ /g'); do echo -A JELASTIC_RULES -s $i -j ACCEPT >> /tmp/ipArray; done",
+							"localip=$(ip r g $(awk '($1 == \"nameserver\"){print $2; exit}' /etc/resolv.conf) | awk '{print $NF; exit}');",
+							"sed -i \"s/^-I INPUT 1 -j JELASTIC_RULES$/-I INPUT 1 -d ${localip} -j JELASTIC_RULES/g\" /etc/sysconfig/iptables-custom",
+							"sed -i \"s/^-I INPUT 2 -j CUSTOMER_RULES$/-I INPUT 2 -d ${localip} -j CUSTOMER_RULES/g\" /etc/sysconfig/iptables-custom",
+							"sed -i '/^-I INPUT [[:digit:]] -d [[:digit:]]*[.][[:digit:]]*[.][[:digit:]]*[.][[:digit:]]* -j JELASTIC_RULES$/r/tmp/ipArray' /etc/sysconfig/iptables-custom",
+							"/usr/bin/jem firewall fwstart"
+						]
+					},
+					"nodeId": "${this.AllNodes}",
+					"user": "root"
+				}
+			},
+			{
+				"id": "addIPintowhitelist",
+				"onCall": [
+					{
+						"execCmd": [
+							{
+								"commands": [
+									"sed -i '/^-I INPUT [[:digit:]] -d [[:digit:]]*[.][[:digit:]]*[.][[:digit:]]*[.][[:digit:]]* -j CUSTOMER_RULES$/a-I CUSTOMER_RULES -s ${this.sourceip} -j ACCEPT' /etc/sysconfig/iptables-custom",
+									"/usr/bin/jem firewall fwstart"
+								],
+								"nodeGroup": "${targetNodes.nodeGroup}",
+								"user": "root"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "removeIPfomwhitelist",
+				"onCall": [
+					{
+						"execCmd": [
+							{
+								"commands": [
+									"sed -i '/^-I CUSTOMER_RULES -s ${this.sourceip} -j ACCEPT$/ d' /etc/sysconfig/iptables-custom",
+									"/usr/bin/jem firewall fwstart"
+								],
+								"nodeGroup": "${targetNodes.nodeGroup}",
+								"user": "root"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "installIptablesAddonProcess",
+				"onCall": [
+					{
+						"execCmd": [
+							{
+								"commands": [
+									"curl -sSfL \"${globals.iptables_custom_file}\" -o /etc/sysconfig/iptables-custom 2>&1"
+								],
+								"nodeId": "${this.AllNodes}",
+								"user": "root"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "removeIptablesAddon",
+				"onCall": [
+					{
+						"execCmd": [
+							{
+								"commands": [
+									"truncate -s 0 /etc/sysconfig/iptables-custom",
+									"/usr/bin/jem firewall fwstart"
+								],
+								"nodeGroup": "${targetNodes.nodeGroup}",
+								"user": "root"
+							}
+						]
+					}
+				]
+			}
+		],
+		"settings": {
+			"IPSettings": {
+				"fields": [
+					{
+						"caption": "Whitelisted IP",
+						"name": "sourceip",
+						"required": true,
+						"type": "string",
+						"regex": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$",
+						"regexText": "Not valid IP address."
+					}
+				]
+			}
+		},
+		"success": "Addon was successufully installed with default Jelastic configuration.",
+		"version": "0.1b"
+	},
+	"jpsType": "update",
+	"jpsVersion": "0.8"
+}
