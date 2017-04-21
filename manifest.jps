@@ -5,12 +5,12 @@
 			"apps/management-and-monitoring"
 		],
 		"description": "Isolation of the environment within an internal network.\n\n\n\n\n\n",
-		"logo": "https://raw.githubusercontent.com/mrAlexZT/internal-network-isolation/master/images/environment-isolation-addon.png",
+		"logo": "https://raw.githubusercontent.com/jelastic-jps/internal-network-isolation/master/images/environment-isolation-addon.png",
 		"targetNodes": {
 			"nodeGroup": "*"
 		},
 		"globals": {
-			"RepoUser": "mrAlexZT",
+			"RepoUser": "jelastic-jps",
 			"iptables_custom_file": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/settings/iptables-custom",
 			"getIpsScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/script.js",
 			"NodesExecScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/nodes_executor.js",
