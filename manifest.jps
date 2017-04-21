@@ -7,7 +7,32 @@
 		"description": "Isolation of the environment within an internal network.\n\n\n\n\n\n",
 		"logo": "https://raw.githubusercontent.com/jelastic-jps/internal-network-isolation/master/images/environment-isolation-addon.png",
 		"targetNodes": {
-			"nodeGroup": "*"
+		  "nodeType": [
+			"tomcat6",
+			"tomcat7",
+			"tomcat8",
+			"tomcat85",
+			"tomcat9",
+			"tomcat",
+			"tomee",
+			"tomee-dockerized",
+			"glassfish3",
+			"glassfish4",
+			"glassfish",
+			"jetty6",
+			"apache",
+			"apache2",
+			"nginxphp",
+			"apache2-ruby",
+			"nginx-ruby",
+			"nginx",
+			"nginx-dockerized",
+			"nginxphp-dockerized",
+			"haproxy",
+			"apache-lb",
+			"varnish",
+			"varnish-dockerized"
+		  ]
 		},
 		"globals": {
 			"RepoUser": "jelastic-jps",
