@@ -37,6 +37,7 @@
 		"globals": {
 			"RepoUser": "jelastic-jps",
 			"iptables_custom_file": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/settings/iptables-custom",
+			"iptables_custom_default": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/settings/iptables-custom-default"
 			"getIpsScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/script.js",
 			"NodesExecScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/nodes_executor.js",
 			"installIptablesAddonScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/installIptablesAddon.js",
@@ -210,6 +211,7 @@
 							{
 								"commands": [
 									"truncate -s 0 /etc/sysconfig/iptables-custom",
+									"curl -sSfL \"${globals.iptables_custom_default}\" -o /etc/sysconfig/iptables-custom 2>&1",
 									"/usr/bin/jem firewall fwstart"
 								],
 								"nodeId": "${this.AllNodes}",

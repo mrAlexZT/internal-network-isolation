@@ -1,0 +1,4 @@
+# The required firewall rules should be defined within this file using the iptables-save utility format. 
+# NOTE: you are performing this at your own risk, thus please refer to the appropriate documentation and 
+# ensure you know exactly what you are doing. Otherwise, this could cause your server's unavailability. 
+# If you do meet any issues after stating your custom firewall rules, contact your hosting provider's support to get the assistance.
