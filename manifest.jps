@@ -40,6 +40,9 @@
 			"getIpsScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/script.js",
 			"NodesExecScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/nodes_executor.js",
 			"installIptablesAddonScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/installIptablesAddon.js",
+			"addIPintowhitelistScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/addIPintowhitelist.js",
+			"removeIPfomwhitelistScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/removeIPfomwhitelist.js",
+			"removeIptablesAddonScript": "https://github.com/${globals.RepoUser}/internal-network-isolation/raw/master/scripts/removeIptablesAddonScript.js",
 			"documentationLink": "http://www.netfilter.org/projects/iptables/index.html"
 		},
 		"menu": [
@@ -127,6 +130,14 @@
 			},
 			{
 				"id": "addIPintowhitelist",
+				"onCall": {
+					"executeScript": {
+						"script": "${globals.addIPintowhitelistScript}"
+					}
+				}
+			},
+			{
+				"id": "addIPintowhitelistProcess",
 				"onCall": [
 					{
 						"execCmd": [
@@ -135,7 +146,7 @@
 									"sed -i '/^-I INPUT [[:digit:]] -d [[:digit:]]*[.][[:digit:]]*[.][[:digit:]]*[.][[:digit:]]* -j CUSTOMER_RULES$/a-I CUSTOMER_RULES -s ${this.sourceip} -j ACCEPT' /etc/sysconfig/iptables-custom",
 									"/usr/bin/jem firewall fwstart"
 								],
-								"nodeGroup": "${targetNodes.nodeGroup}",
+								"nodeId": "${this.AllNodes}",
 								"user": "root"
 							}
 						]
@@ -144,6 +155,14 @@
 			},
 			{
 				"id": "removeIPfomwhitelist",
+				"onCall": {
+					"executeScript": {
+						"script": "${globals.removeIPfomwhitelistScript}"
+					}
+				}
+			},
+			{
+				"id": "removeIPfomwhitelistProcess",
 				"onCall": [
 					{
 						"execCmd": [
@@ -152,7 +171,7 @@
 									"sed -i '/^-I CUSTOMER_RULES -s ${this.sourceip} -j ACCEPT$/ d' /etc/sysconfig/iptables-custom",
 									"/usr/bin/jem firewall fwstart"
 								],
-								"nodeGroup": "${targetNodes.nodeGroup}",
+								"nodeId": "${this.AllNodes}",
 								"user": "root"
 							}
 						]
@@ -177,6 +196,14 @@
 			},
 			{
 				"id": "removeIptablesAddon",
+				"onCall": {
+					"executeScript": {
+						"script": "${globals.removeIptablesAddonScript}"
+					}
+				}
+			},
+			{
+				"id": "removeIptablesAddonProcess",
 				"onCall": [
 					{
 						"execCmd": [
@@ -185,7 +212,7 @@
 									"truncate -s 0 /etc/sysconfig/iptables-custom",
 									"/usr/bin/jem firewall fwstart"
 								],
-								"nodeGroup": "${targetNodes.nodeGroup}",
+								"nodeId": "${this.AllNodes}",
 								"user": "root"
 							}
 						]
