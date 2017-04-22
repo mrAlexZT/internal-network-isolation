@@ -20,6 +20,7 @@ for (i = 0, n = oNodes.length; i < n; i += 1) {
 	aResult.push({
 		addIPintowhitelistProcess: {
 			AllNodes: oNodes[i].id
+			sourceip: "${this.sourceip}"
 		}
 	});
 }
